@@ -2,7 +2,7 @@ import CustomTextInput from 'components/CustomTextInput';
 
 import {InputRules} from 'components/IInputRules';
 import {globalcolor} from 'public/globalcolor';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,32 @@ import {
   Dimensions,
   SafeAreaView,
 } from 'react-native';
-import {navigate, replace} from './root/NavigationService';
+import {navigate} from './root/NavigationService';
 import {SCREENS} from './root/RootScreens';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width, height} = Dimensions.get('window');
 
-const Home = (props: any) => {
-  console.log(props.route.params);
+const Home = () => {
+  const [name, setName] = useState('');
+  useEffect(() => {
+    getuserName();
+  }, []);
 
-  let name = props.route.params?.name;
+  const getuserName = async () => {
+    try {
+      const userName = await AsyncStorage.getItem('Name');
+      console.log(userName);
+
+      if (userName !== null) {
+        setName(userName);
+      }
+    } catch (error) {
+      console.error('Error retrieving username:', error);
+    }
+  };
   function handleLogIn() {
+    alert('Logged Out Successfully');
     navigate(SCREENS.LOGIN);
   }
 
@@ -76,11 +92,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   welcomeText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#777',
     marginBottom: 20,
     textAlign: 'center',
     marginTop: 20,
+    fontWeight: 'bold',
   },
   agreeText: {
     fontSize: 14,
@@ -93,13 +110,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#ADD8E6',
+    backgroundColor: globalcolor.btnColor,
     paddingVertical: 12,
     paddingHorizontal: 60,
     borderRadius: 25,
   },
   buttonText: {
-    color: '#fff',
+    color: globalcolor.white,
     fontSize: 18,
   },
   icon: {

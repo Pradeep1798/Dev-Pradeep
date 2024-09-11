@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {SCREENS} from './root/RootScreens';
 import {navigate} from './root/NavigationService';
+import {globalcolor} from 'public/globalcolor';
 
 const Welcome = () => {
   function handleLogIn() {
@@ -90,14 +91,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#ADD8E6',
+    backgroundColor: globalcolor.btnColor,
     paddingVertical: 12,
     paddingHorizontal: 60,
     borderRadius: 25,
     marginBottom: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: globalcolor.white,
     fontSize: 18,
   },
   signInText: {

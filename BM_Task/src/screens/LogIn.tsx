@@ -15,6 +15,8 @@ import {navigate, replace} from './root/NavigationService';
 import {SCREENS} from './root/RootScreens';
 import {ILoginService} from 'services/login/ILoginService';
 import LoginService from 'services/login/LoginService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ForgotModal from './ForgotModal';
 
 const {width, height} = Dimensions.get('window');
 
@@ -22,6 +24,7 @@ const LogIn = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [hidePassword, setHidePassword] = useState<boolean>(true);
+  const [isModalVisible, setModalVisible] = useState<boolean>(false);
 
   const loginService: ILoginService = new LoginService();
 
@@ -41,11 +44,11 @@ const LogIn = () => {
     navigate(SCREENS.SIGNUP);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!email) {
       alert('Please enter the phone number');
     } else if (!password) {
-      alert('Please enter the password ');
+      alert('Please enter the password');
     } else {
       let userDetails: any = {
         phone: email,
@@ -53,27 +56,38 @@ const LogIn = () => {
       };
       console.log('userDetails', userDetails);
 
-      loginService
+      await loginService
         .userLogin(userDetails)
         .then(async data => {
+          console.log('Full login response:', data);
+
           if (data) {
-            console.log('userLogin', data);
             if (data.status) {
-              alert('Login Success');
-              let username = data.data;
-              replace(SCREENS.HOME, username);
+              let username = data?.data?.name;
+              console.log('username:', username);
+              if (username) {
+                await AsyncStorage.setItem('Name', username);
+                alert(data.message);
+                replace(SCREENS.HOME);
+              } else {
+                alert('No username found in the response');
+              }
             } else {
-              alert('LogIn Failed');
+              alert('LogIn Failed: ' + data.message);
             }
           } else {
             alert('Invalid Credentials');
           }
         })
         .catch(function (error) {
-          console.log('userLogin', error);
+          console.log('Error during userLogin:', error);
         });
     }
   }
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   return (
     <SafeAreaView style={styles.Parent}>
@@ -121,7 +135,7 @@ const LogIn = () => {
         iconpress={showpassword}
       />
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={toggleModal}>
         <Text style={styles.forgotPassword}>Forgot password?</Text>
       </TouchableOpacity>
 
@@ -152,12 +166,13 @@ const LogIn = () => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.signUpText}>
-        Don’t have an account?
-        <TouchableOpacity onPress={handleSignUp} style={{marginTop: 5}}>
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Don’t have an account?</Text>
+        <TouchableOpacity onPress={handleSignUp}>
           <Text style={styles.signUpLink}>Sign Up</Text>
         </TouchableOpacity>
-      </Text>
+      </View>
+
       <Text style={styles.agreeText}>
         By login or sign up, you agree to our terms of use and privacy policy
       </Text>
@@ -165,6 +180,7 @@ const LogIn = () => {
         source={require('assets/downRight.png')}
         style={styles.splashImage}
       />
+      <ForgotModal isVisible={isModalVisible} onClose={toggleModal} />
     </SafeAreaView>
   );
 };
@@ -202,11 +218,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   agreeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#777',
     marginBottom: 20,
-    marginTop: 20,
     textAlign: 'center',
+    marginLeft: 2,
+    marginRight: 2,
   },
   welcomeText: {
     fontSize: 16,
@@ -219,13 +236,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#ADD8E6',
+    backgroundColor: globalcolor.btnColor,
     paddingVertical: 12,
     paddingHorizontal: 60,
     borderRadius: 25,
   },
   buttonText: {
-    color: '#fff',
+    color: globalcolor.white,
     fontSize: 18,
   },
   icon: {
@@ -275,9 +292,16 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
   },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
   signUpText: {
     color: '#777',
-    textAlign: 'center',
+    marginRight: 5,
   },
   signUpLink: {
     color: '#007BFF',

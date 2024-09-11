@@ -16,6 +16,8 @@ import {navigate, replace} from './root/NavigationService';
 import {SCREENS} from './root/RootScreens';
 import {ILoginService} from 'services/login/ILoginService';
 import LoginService from 'services/login/LoginService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CheckBox from '@react-native-community/checkbox';
 
 const {width, height} = Dimensions.get('window');
 
@@ -24,6 +26,7 @@ const SignUp = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [hidePassword, setHidePassword] = useState<boolean>(true);
+  const [isChecked, setIsChecked] = useState<boolean>(false);
 
   const loginService: ILoginService = new LoginService();
 
@@ -45,7 +48,7 @@ const SignUp = () => {
     navigate(SCREENS.LOGIN);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!email) {
       alert('Please enter the phone number');
     } else if (!password) {
@@ -58,17 +61,22 @@ const SignUp = () => {
       };
       console.log('userDetails', userDetails);
 
-      loginService
+      await loginService
         .userSignUp(userDetails)
         .then(async data => {
           if (data) {
-            console.log('userLogin', data);
             if (data.status) {
-              alert('Registration Success');
-              let username = data.data;
-              replace(SCREENS.HOME, username);
+              let username = data?.data?.name;
+              console.log('username:', username);
+              if (username) {
+                await AsyncStorage.setItem('Name', username);
+                alert(data.message);
+                replace(SCREENS.HOME);
+              } else {
+                alert('No username found in the response');
+              }
             } else {
-              alert('Registration Failed');
+              alert('SignUp Failed: ' + data.message);
             }
           } else {
             alert('Invalid Credentials');
@@ -140,22 +148,31 @@ const SignUp = () => {
         iconpress={showpassword}
       />
 
-      <TouchableOpacity>
-        <Text style={styles.forgotPassword}>Forgot password?</Text>
-      </TouchableOpacity>
-
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.signUpText}>
-        Already have an account?
-        <TouchableOpacity onPress={handleLogIn} style={{marginTop: 5}}>
-          <Text style={styles.signUpLink}>Sign In</Text>
+      <View style={styles.termsContainer}>
+        <CheckBox
+          value={isChecked}
+          onValueChange={setIsChecked}
+          tintColors={{true: '#007BFF', false: '#000'}}
+        />
+        <Text style={styles.termsText}>
+          I agree to the
+          <Text style={styles.termsLink}>Terms and Conditions</Text>
+        </Text>
+      </View>
+
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Don’t have an account?</Text>
+        <TouchableOpacity onPress={handleLogIn}>
+          <Text style={styles.signUpLink}>Sign Up</Text>
         </TouchableOpacity>
-      </Text>
+      </View>
+
       <Text style={styles.agreeText}>
         By login or sign up, you agree to our terms of use and privacy policy
       </Text>
@@ -207,17 +224,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   agreeText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#777',
     marginBottom: 20,
     textAlign: 'center',
+    marginLeft: 2,
+    marginRight: 2,
   },
   buttonContainer: {
     alignItems: 'center',
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#ADD8E6',
+    backgroundColor: globalcolor.btnColor,
     paddingVertical: 12,
     paddingHorizontal: 60,
     borderRadius: 25,
@@ -262,14 +281,21 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
   },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
   signUpText: {
     color: '#777',
-    marginBottom: 20,
-    textAlign: 'center',
+    marginRight: 5,
   },
   signUpLink: {
     color: '#007BFF',
     fontWeight: 'bold',
+    marginTop: 5,
   },
   splashImage: {
     position: 'absolute',
@@ -280,6 +306,21 @@ const styles = StyleSheet.create({
     height: height * 0.1,
     resizeMode: 'cover',
     transform: [{rotate: '90deg'}],
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  termsText: {
+    fontSize: 16,
+    color: '#777',
+    marginLeft: 10,
+  },
+  termsLink: {
+    color: '#007BFF',
+    fontWeight: 'bold',
   },
 });
 

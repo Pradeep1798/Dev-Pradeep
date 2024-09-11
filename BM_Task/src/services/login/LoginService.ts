@@ -8,13 +8,16 @@ import axios from 'axios';
 
 export default class LoginService implements ILoginService {
   async userLogin(data: LoginRequestDetails): Promise<SignUpResponseDetails> {
-    return await axios.post(
+    const response = await axios.post(
       `https://tor.appdevelopers.mobi/api/login?phone=${data.phone}&password=${data.password}`,
     );
+    return response.data;
   }
+
   async userSignUp(data: SignUpRequestDetails): Promise<SignUpResponseDetails> {
-    return await axios.post(
+    const response = await axios.post(
       `https://tor.appdevelopers.mobi/api/register?phone=${data.phone}&password=${data.password}&name=${data.name}`,
     );
+    return response.data;
   }
 }
